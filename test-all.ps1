@@ -23,7 +23,7 @@ $signupBody = @{
 } | ConvertTo-Json
 
 Write-Host "Creating user: $testEmail"
-$signupResponse = Invoke-WebRequest -Uri "$API/auth/signup" -Method POST -ContentType "application/json" -Body $signupBody
+$signupResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/auth/signup" -Method POST -ContentType "application/json" -Body $signupBody -UseBasicParsing
 $signupResult = $signupResponse.Content | ConvertFrom-Json
 $userId = $signupResult.user.id
 Write-Host "SUCCESS: User created!" -ForegroundColor Green
@@ -42,7 +42,7 @@ $signinBody = @{
 } | ConvertTo-Json
 
 Write-Host "Signing in with: $testEmail"
-$signinResponse = Invoke-WebRequest -Uri "$API/auth/signin" -Method POST -ContentType "application/json" -Body $signinBody
+$signinResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/auth/signin" -Method POST -ContentType "application/json" -Body $signinBody
 $signinResult = $signinResponse.Content | ConvertFrom-Json
 Write-Host "SUCCESS: User signed in!" -ForegroundColor Green
 
@@ -60,7 +60,7 @@ $post1Body = @{
 } | ConvertTo-Json
 
 Write-Host "Creating first blog post..."
-$post1Response = Invoke-WebRequest -Uri "$API/posts" -Method POST -ContentType "application/json" -Body $post1Body
+$post1Response = Invoke-WebRequest -UseBasicParsing -Uri "$API/posts" -Method POST -ContentType "application/json" -Body $post1Body
 $post1Result = $post1Response.Content | ConvertFrom-Json
 $postId = $post1Result._id
 Write-Host "SUCCESS: First post created!" -ForegroundColor Green
@@ -79,7 +79,7 @@ $post2Body = @{
 
 Write-Host ""
 Write-Host "Creating second blog post..."
-$post2Response = Invoke-WebRequest -Uri "$API/posts" -Method POST -ContentType "application/json" -Body $post2Body
+$post2Response = Invoke-WebRequest -UseBasicParsing -Uri "$API/posts" -Method POST -ContentType "application/json" -Body $post2Body
 $post2Result = $post2Response.Content | ConvertFrom-Json
 Write-Host "SUCCESS: Second post created!" -ForegroundColor Green
 Write-Host "  Post ID: $($post2Result._id)" -ForegroundColor Cyan
@@ -88,7 +88,7 @@ Write-Host "  Title: $($post2Result.title)" -ForegroundColor Cyan
 # Get all posts
 Write-Host ""
 Write-Host "Fetching all posts..."
-$allPostsResponse = Invoke-WebRequest -Uri "$API/posts" -Method GET
+$allPostsResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/posts" -Method GET
 $allPostsResult = $allPostsResponse.Content | ConvertFrom-Json
 Write-Host "SUCCESS: Retrieved all posts!" -ForegroundColor Green
 Write-Host "  Total posts: $($allPostsResult.Count)" -ForegroundColor Cyan
@@ -108,7 +108,7 @@ $mark1Body = @{
 } | ConvertTo-Json
 
 Write-Host "Creating Mathematics mark..."
-$mark1Response = Invoke-WebRequest -Uri "$API/marks" -Method POST -ContentType "application/json" -Body $mark1Body
+$mark1Response = Invoke-WebRequest -UseBasicParsing -Uri "$API/marks" -Method POST -ContentType "application/json" -Body $mark1Body
 $mark1Result = $mark1Response.Content | ConvertFrom-Json
 $markId = $mark1Result._id
 Write-Host "SUCCESS: Mark created!" -ForegroundColor Green
@@ -131,14 +131,14 @@ foreach ($subject in $subjects) {
         notes = "Test for $subject"
     } | ConvertTo-Json
     
-    $markResponse = Invoke-WebRequest -Uri "$API/marks" -Method POST -ContentType "application/json" -Body $markBody
+    $markResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/marks" -Method POST -ContentType "application/json" -Body $markBody
     Write-Host "  [OK] $subject : $randomMarks/100" -ForegroundColor Green
 }
 
 # Get all marks
 Write-Host ""
 Write-Host "Fetching all marks for user..."
-$allMarksResponse = Invoke-WebRequest -Uri "$API/marks?userId=$userId" -Method GET
+$allMarksResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/marks?userId=$userId" -Method GET
 $allMarksResult = $allMarksResponse.Content | ConvertFrom-Json
 Write-Host "SUCCESS: Retrieved all marks!" -ForegroundColor Green
 Write-Host "  Total marks: $($allMarksResult.Count)" -ForegroundColor Cyan
@@ -161,11 +161,11 @@ $updatePostBody = @{
 } | ConvertTo-Json
 
 Write-Host "Updating first post..."
-$updateResponse = Invoke-WebRequest -Uri "$API/posts/$postId" -Method PUT -ContentType "application/json" -Body $updatePostBody
+$updateResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/posts/$postId" -Method PUT -ContentType "application/json" -Body $updatePostBody
 Write-Host "SUCCESS: Post updated!" -ForegroundColor Green
 
 # Verify update
-$verifyResponse = Invoke-WebRequest -Uri "$API/posts/$postId" -Method GET
+$verifyResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/posts/$postId" -Method GET
 $verifyResult = $verifyResponse.Content | ConvertFrom-Json
 Write-Host "  Updated mood: $($verifyResult.mood)" -ForegroundColor Cyan
 
@@ -184,11 +184,11 @@ $updateMarkBody = @{
 } | ConvertTo-Json
 
 Write-Host "Updating Mathematics mark..."
-$updateMarkResponse = Invoke-WebRequest -Uri "$API/marks/$markId" -Method PUT -ContentType "application/json" -Body $updateMarkBody
+$updateMarkResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/marks/$markId" -Method PUT -ContentType "application/json" -Body $updateMarkBody
 Write-Host "SUCCESS: Mark updated!" -ForegroundColor Green
 
 # Verify mark update
-$verifyMarksResponse = Invoke-WebRequest -Uri "$API/marks?userId=$userId" -Method GET
+$verifyMarksResponse = Invoke-WebRequest -UseBasicParsing -Uri "$API/marks?userId=$userId" -Method GET
 $verifyMarksResult = $verifyMarksResponse.Content | ConvertFrom-Json
 $mathMark = $verifyMarksResult | Where-Object { $_.subject -eq "Mathematics" } | Select-Object -First 1
 Write-Host "  Updated marks: $($mathMark.marks_obtained)/$($mathMark.total_marks)" -ForegroundColor Cyan

@@ -1,0 +1,10 @@
+node_modules
+.git
+.vscode
+simple-server.cjs
+simple-server.js
+test-*.ps1
+*.test.ts
+vitest.config.ts
+vite.config.ts
+src/test

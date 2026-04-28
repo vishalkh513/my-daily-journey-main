@@ -111,12 +111,20 @@ app.post('/api/marks', async (req, res) => {
 // Authentication endpoints
 app.post('/api/auth/signup', async (req, res) => {
   try {
-    const { email, username, password } = req.body;
+    const { email, username, password, confirmPassword } = req.body;
     
     console.log('📝 Signup request:', { email, username });
     
-    if (!email || !username || !password) {
-      return res.status(400).json({ error: 'Email, username, and password are required' });
+    if (!email || !username || !password || !confirmPassword) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
     // Check if user already exists
@@ -144,7 +152,7 @@ app.post('/api/auth/signup', async (req, res) => {
 
     console.log(`✅ User created: ${email}`);
 
-    res.json({
+    res.status(201).json({
       success: true,
       message: 'Account created successfully',
       user: {
