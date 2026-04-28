@@ -214,26 +214,15 @@ app.post('/api/auth/signin', async (req, res) => {
   }
 });
 
-// Blog post endpoints
-app.get('/api/posts', async (req, res) => {
-  try {
-    const posts = await db.collection('posts')
-      .find({})
-      .sort({ createdAt: -1 })
-      .toArray();
-    
-    res.json(posts);
-  } catch (error) {
-    console.error('❌ Fetch posts error:', error);
-    res.status(500).json({ error: 'Failed to fetch posts' });
-  }
-});
+// ========== Blog Post Endpoints ==========
+// IMPORTANT: POST and specific :id routes BEFORE generic routes
 
+// POST create blog post
 app.post('/api/posts', async (req, res) => {
+  console.log('POST /api/posts called');
   try {
     const { userId, title, content, mood, postDate } = req.body;
-
-    console.log('📝 Create post request:', { userId, title, mood });
+    console.log('Create post:', { userId, title, mood });
 
     if (!userId || !title || !content) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -245,19 +234,130 @@ app.post('/api/posts', async (req, res) => {
       author: userId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      mood: mood || undefined,
+      mood: mood || null,
       tags: [],
       published: true,
       postDate: postDate || new Date().toISOString()
     };
 
     const result = await db.collection('posts').insertOne(newPost);
-    
-    console.log(`✅ Post created: ${result.insertedId}`);
+    console.log(`Post created: ${result.insertedId}`);
     res.status(201).json({ ...newPost, _id: result.insertedId.toString() });
   } catch (error) {
-    console.error('❌ Create post error:', error);
-    res.status(500).json({ error: 'Failed to create post' });
+    console.error('Create post error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET fetch single post by ID
+app.get('/api/posts/:postId', async (req, res) => {
+  console.log('GET /api/posts/:postId called with postId =', req.params.postId);
+  try {
+    const postId = req.params.postId;
+    
+    if (!postId || postId === 'all') {
+      return res.status(400).json({ error: 'Invalid post ID' });
+    }
+
+    console.log('Querying post:', postId);
+    const post = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
+    
+    if (!post) {
+      console.log('Post not found:', postId);
+      return res.status(404).json({ error: 'Post not found' });
+    }
+    
+    console.log('Post found:', post._id);
+    res.json(post);
+  } catch (error) {
+    console.error('Get post error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT update blog post
+app.put('/api/posts/:postId', async (req, res) => {
+  console.log('PUT /api/posts/:postId called');
+  try {
+    const postId = req.params.postId;
+    const { userId, title, content, mood } = req.body;
+
+    if (!postId || !userId || !title || !content) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const post = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (post.author !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const updatedPost = {
+      title,
+      content,
+      mood: mood || null,
+      updatedAt: new Date().toISOString()
+    };
+
+    await db.collection('posts').updateOne(
+      { _id: new ObjectId(postId) },
+      { $set: updatedPost }
+    );
+
+    console.log('Post updated:', postId);
+    res.json({ ...post, ...updatedPost, _id: postId });
+  } catch (error) {
+    console.error('Update post error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE blog post
+app.delete('/api/posts/:postId', async (req, res) => {
+  console.log('DELETE /api/posts/:postId called');
+  try {
+    const postId = req.params.postId;
+    const { userId } = req.query;
+
+    if (!postId || !userId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const post = await db.collection('posts').findOne({ _id: new ObjectId(postId) });
+    if (!post) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (post.author !== userId) {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    await db.collection('posts').deleteOne({ _id: new ObjectId(postId) });
+    console.log('Post deleted:', postId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Delete post error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET all posts (MUST come AFTER specific :id routes)
+app.get('/api/posts', async (req, res) => {
+  console.log('GET /api/posts (all) called');
+  try {
+    const posts = await db.collection('posts')
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    
+    console.log('Returning', posts.length, 'posts');
+    res.json(posts);
+  } catch (error) {
+    console.error('Fetch posts error:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -275,7 +375,10 @@ connectDB().then(() => {
     console.log(`  POST /api/auth/signin - Login`);
     console.log(`📰 Blog Post Endpoints:`);
     console.log(`  GET  /api/posts - Get all posts`);
+    console.log(`  GET  /api/posts/:id - Get single post`);
     console.log(`  POST /api/posts - Create new post`);
+    console.log(`  PUT  /api/posts/:id - Update post`);
+    console.log(`  DELETE /api/posts/:id - Delete post`);
     console.log(`�📊 Marks Endpoints:`);
     console.log(`  GET  /api/marks?userId=USER_ID - Get marks`);
     console.log(`  POST /api/marks - Create mark`);

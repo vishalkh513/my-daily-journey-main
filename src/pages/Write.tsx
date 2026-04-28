@@ -36,11 +36,14 @@ const Write = () => {
     if (!id) return;
     setLoadingPost(true);
     fetch(`http://localhost:3000/api/posts/${id}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load');
+        return res.json();
+      })
       .then((data) => {
-        setTitle(data.title);
-        setContent(data.content);
-        setMood(data.mood ?? "");
+        setTitle(data.title || '');
+        setContent(data.content || '');
+        setMood(data.mood ?? '');
         setLoadingPost(false);
       })
       .catch((error) => {
