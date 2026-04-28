@@ -11,9 +11,6 @@
       "destination": "/index.html"
     }
   ],
-  "env": {
-    "VITE_MONGODB_URI": "@VITE_MONGODB_URI"
-  },
   "functions": {
     "api/**/*.ts": {
       "runtime": "nodejs20.x",
