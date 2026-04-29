@@ -242,7 +242,7 @@ const Marks = () => {
                 <Label className="text-[11px] uppercase tracking-[0.2em]">Subject</Label>
                 <Select value={subject} onValueChange={setSubject}>
                   <SelectTrigger><SelectValue placeholder="Select a subject" /></SelectTrigger>
-                  <SelectContent>
+                  <SelectContent side="bottom" avoidCollisions={true}>
                     {SUBJECTS.map((s) => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
                   </SelectContent>
                 </Select>
